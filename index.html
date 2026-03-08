@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Türkü Arşivi</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Crimson+Text:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f5e6e0 0%, #ede0d4 40%, #e8d5c4 100%);
+    font-family: 'Crimson Text', serif;
+    padding-bottom: 40px;
+  }
+  header {
+    background: linear-gradient(135deg, #8B0000, #c0392b);
+    padding: 28px 20px 22px;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(139,0,0,0.3);
+  }
+  header .icon { font-size: 32px; margin-bottom: 4px; }
+  header h1 { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 900; color: #fff; letter-spacing: 1px; }
+  header .count { color: #ffcdd2; font-size: 14px; margin-top: 4px; }
+
+  .container { max-width: 680px; margin: 0 auto; padding: 20px 16px 0; }
+
+  input[type=text] {
+    width: 100%;
+    padding: 12px 18px;
+    border-radius: 30px;
+    border: 2px solid #e8b4ad;
+    background: rgba(255,255,255,0.9);
+    font-size: 15px;
+    font-family: 'Crimson Text', serif;
+    color: #2c1010;
+    outline: none;
+    box-shadow: 0 2px 10px rgba(150,50,50,0.1);
+    margin-bottom: 16px;
+  }
+  input::placeholder { color: #c4a09a; }
+
+  .filter-group { margin-bottom: 14px; }
+  .filter-label { font-size: 12px; font-weight: 600; color: #8B0000; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1.5px solid #d4a5a0;
+    background: rgba(255,255,255,0.7);
+    color: #7a3030;
+    font-size: 13px;
+    font-family: 'Crimson Text', serif;
+    cursor: pointer;
+    transition: all 0.2s;
+    backdrop-filter: blur(4px);
+  }
+  .chip.active {
+    border: 2px solid #c0392b;
+    background: #c0392b;
+    color: #fff;
+    font-weight: 600;
+  }
+
+  .reset-btn {
+    background: none;
+    border: none;
+    color: #c0392b;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: 'Crimson Text', serif;
+    text-decoration: underline;
+    margin-bottom: 16px;
+    display: none;
+  }
+
+  .results { display: flex; flex-direction: column; gap: 10px; }
+
+  .card {
+    background: rgba(255,255,255,0.85);
+    border-radius: 12px;
+    padding: 16px 20px;
+    border-left: 4px solid #c0392b;
+    box-shadow: 0 2px 12px rgba(150,50,50,0.1);
+    backdrop-filter: blur(8px);
+    animation: fadeIn 0.3s ease both;
+  }
+  .card-title { font-family: 'Playfair Display', serif; font-size: 17px; font-weight: 700; color: #2c1010; margin-bottom: 8px; }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+  .tag { border-radius: 12px; padding: 2px 10px; font-size: 12px; font-family: 'Crimson Text', serif; font-weight: 600; }
+  .tag-il    { background: #fff3f3; color: #8B0000; border: 1px solid #8B000033; }
+  .tag-yore  { background: #fff8f5; color: #6d4c41; border: 1px solid #6d4c4133; }
+  .tag-makam { background: #f0f8ff; color: #1a5276; border: 1px solid #1a527633; }
+  .tag-usul  { background: #f0fff4; color: #196f3d; border: 1px solid #196f3d33; }
+  .tag-duzen { background: #fdf0ff; color: #6c3483; border: 1px solid #6c348333; }
+  .card-meta { font-size: 12px; color: #888; }
+  .card-meta span { margin-right: 12px; }
+
+  .empty { text-align: center; color: #a07070; padding: 40px; font-size: 16px; }
+
+  @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: #f5e6e0; }
+  ::-webkit-scrollbar-thumb { background: #c0392b; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="icon">🎸</div>
+  <h1>Türkü Arşivi</h1>
+  <div class="count" id="countText"></div>
+</header>
+
+<div class="container">
+  <input type="text" id="searchInput" placeholder="🔍  Türkü adı ara...">
+
+  <div id="filters"></div>
+  <button class="reset-btn" id="resetBtn" onclick="resetAll()">✕ Filtreleri temizle</button>
+
+  <div class="results" id="results"></div>
+</div>
+
+<script>
+const turkuData = [
+  { ad: "Aç kapıyı ben geldim", il: "Safranbolu", ilce: "Karabük", yore: "Batı Karadeniz", kaynak: "Mistan Kürkçü", karar: "Re Karar", makam: "Hüseyni", usul: "9/8", duzen: "Bozuk" },
+  { ad: "Afiyonun ortasında", il: "Afyon", ilce: "", yore: "Ege", kaynak: "Abdullah Uluçelik", karar: "Sol Karar", makam: "Hicazkar", usul: "9/8", duzen: "Bozuk" },
+  { ad: "Akşam olır karanlığa kalırsın", il: "Sivas", ilce: "Divrik", yore: "İç Anadolu", kaynak: "Mehmet Yüzgeç", karar: "La Karar", makam: "Uşşak", usul: "3/8", duzen: "Abdal" },
+  { ad: "Al Fadimem", il: "Afyon", ilce: "Emirdağ", yore: "Ege", kaynak: "Metin Akın", karar: "La Karar", makam: "Kürdi", usul: "10/8", duzen: "Abdal" },
+  { ad: "Al perfe Yeşil perde", il: "Giresun", ilce: "", yore: "Doğu Karadeniz", kaynak: "Aytekin Özdemir", karar: "Sol Karar", makam: "Hicazkar", usul: "4/4", duzen: "Bozuk" },
+  { ad: "Alı da verin benim barutuma saçmama", il: "Muğla", ilce: "", yore: "Ege", kaynak: "Galip Birgili", karar: "La Karar", makam: "Hüseyni", usul: "9/4", duzen: "Bozuk" },
+  { ad: "Alıverin bağlamamı çalayım", il: "", ilce: "", yore: "Rumeli", kaynak: "", karar: "Si Karar", makam: "Segah", usul: "4/4", duzen: "Eviç" },
+  { ad: "Allı Durnam", il: "Kırıkkale", ilce: "Keskin", yore: "İç Anadolu", kaynak: "Hacı Taşan", karar: "La Karar", makam: "Hüseyni", usul: "2/4", duzen: "Abdal" },
+  { ad: "Altın tasta gül kuruttum", il: "Antakya", ilce: "", yore: "Akdeniz", kaynak: "Sıdıka Şerbetçi", karar: "La Karar", makam: "Acemkürdi", usul: "9/8", duzen: "Abdal" },
+];
+
+const filterDefs = [
+  { label: "Yöre", key: "yore" },
+  { label: "İl", key: "il" },
+  { label: "Makam", key: "makam" },
+  { label: "Usul", key: "usul" },
+  { label: "Düzen", key: "duzen" },
+];
+
+let selected = { yore: "", il: "", makam: "", usul: "", duzen: "" };
+let searchVal = "";
+
+function unique(key) {
+  return [...new Set(turkuData.map(t => t[key]).filter(Boolean))].sort();
+}
+
+function buildFilters() {
+  const container = document.getElementById("filters");
+  container.innerHTML = "";
+  filterDefs.forEach(({ label, key }) => {
+    const vals = unique(key);
+    const group = document.createElement("div");
+    group.className = "filter-group";
+    group.innerHTML = `<div class="filter-label">${label}</div><div class="chips" id="chips-${key}"></div>`;
+    container.appendChild(group);
+    const chipsDiv = group.querySelector(`#chips-${key}`);
+    vals.forEach(v => {
+      const btn = document.createElement("button");
+      btn.className = "chip" + (selected[key] === v ? " active" : "");
+      btn.textContent = v;
+      btn.onclick = () => { selected[key] = selected[key] === v ? "" : v; render(); };
+      chipsDiv.appendChild(btn);
+    });
+  });
+}
+
+function render() {
+  buildFilters();
+  const results = turkuData.filter(t => {
+    const s = searchVal.toLowerCase();
+    if (s && !t.ad.toLowerCase().includes(s)) return false;
+    for (const key of Object.keys(selected)) {
+      if (selected[key] && (t[key] || "").toLowerCase() !== selected[key].toLowerCase()) return false;
+    }
+    return true;
+  });
+
+  const hasFilter = searchVal || Object.values(selected).some(Boolean);
+  document.getElementById("resetBtn").style.display = hasFilter ? "block" : "none";
+  document.getElementById("countText").textContent = `${results.length} / ${turkuData.length} türkü`;
+
+  const container = document.getElementById("results");
+  container.innerHTML = "";
+  if (results.length === 0) {
+    container.innerHTML = '<div class="empty">Eşleşen türkü bulunamadı 🎵</div>';
+    return;
+  }
+  results.forEach((t, i) => {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.style.animationDelay = `${i * 0.05}s`;
+    const ilText = t.il ? (t.ilce ? `${t.il} / ${t.ilce}` : t.il) : "";
+    card.innerHTML = `
+      <div class="card-title">🎵 ${t.ad}</div>
+      <div class="tags">
+        ${ilText ? `<span class="tag tag-il">${ilText}</span>` : ""}
+        ${t.yore ? `<span class="tag tag-yore">${t.yore}</span>` : ""}
+        ${t.makam ? `<span class="tag tag-makam">${t.makam}</span>` : ""}
+        ${t.usul ? `<span class="tag tag-usul">${t.usul}</span>` : ""}
+        ${t.duzen ? `<span class="tag tag-duzen">${t.duzen}</span>` : ""}
+      </div>
+      <div class="card-meta">
+        ${t.karar ? `<span>🎼 ${t.karar}</span>` : ""}
+        ${t.kaynak ? `<span>📖 ${t.kaynak}</span>` : ""}
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function resetAll() {
+  searchVal = "";
+  selected = { yore: "", il: "", makam: "", usul: "", duzen: "" };
+  document.getElementById("searchInput").value = "";
+  render();
+}
+
+document.getElementById("searchInput").addEventListener("input", e => {
+  searchVal = e.target.value;
+  render();
+});
+
+render();
+</script>
+</body>
+</html>
