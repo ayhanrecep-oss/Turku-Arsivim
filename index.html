@@ -39,13 +39,8 @@
     gap: 10px;
     justify-content: center;
   }
-  .upload-area:hover, .upload-area.drag-over {
-    background: rgba(192,57,43,0.08);
-    border-color: #8B0000;
-  }
-  .upload-area input[type=file] {
-    position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
-  }
+  .upload-area:hover, .upload-area.drag-over { background: rgba(192,57,43,0.08); border-color: #8B0000; }
+  .upload-area input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
   .upload-icon { font-size: 18px; }
   .upload-text { font-size: 13px; color: #8B0000; font-weight: 600; }
   .upload-sub { font-size: 11px; color: #a07070; }
@@ -69,15 +64,10 @@
   .filter-label { font-size: 11px; font-weight: 600; color: #8B0000; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px; }
   .chips { display: flex; flex-wrap: wrap; gap: 5px; }
   .chip {
-    padding: 5px 13px;
-    border-radius: 20px;
-    border: 1.5px solid #d4a5a0;
-    background: rgba(255,255,255,0.7);
-    color: #7a3030;
-    font-size: 13px;
-    font-family: 'Crimson Text', serif;
-    cursor: pointer;
-    transition: all 0.2s;
+    padding: 5px 13px; border-radius: 20px;
+    border: 1.5px solid #d4a5a0; background: rgba(255,255,255,0.7);
+    color: #7a3030; font-size: 13px; font-family: 'Crimson Text', serif;
+    cursor: pointer; transition: all 0.2s;
   }
   .chip.active { border: 2px solid #c0392b; background: #c0392b; color: #fff; font-weight: 600; }
   .reset-btn {
@@ -88,8 +78,7 @@
   .results { display: flex; flex-direction: column; gap: 10px; }
   .card {
     background: rgba(255,255,255,0.85);
-    border-radius: 12px;
-    padding: 14px 18px;
+    border-radius: 12px; padding: 14px 18px;
     border-left: 4px solid #c0392b;
     box-shadow: 0 2px 12px rgba(150,50,50,0.1);
     animation: fadeIn 0.3s ease both;
@@ -102,8 +91,16 @@
   .tag-makam { background: #f0f8ff; color: #1a5276; border: 1px solid #1a527633; }
   .tag-usul  { background: #f0fff4; color: #196f3d; border: 1px solid #196f3d33; }
   .tag-duzen { background: #fdf0ff; color: #6c3483; border: 1px solid #6c348333; }
+  .card-bottom { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px; }
   .card-meta { font-size: 12px; color: #888; }
   .card-meta span { margin-right: 12px; }
+  .nota-btn {
+    background: #8B0000; color: #fff; border: none; border-radius: 20px;
+    padding: 5px 14px; font-size: 12px; font-family: 'Crimson Text', serif;
+    cursor: pointer; font-weight: 600; transition: background 0.2s;
+    white-space: nowrap;
+  }
+  .nota-btn:hover { background: #c0392b; }
   .empty { text-align: center; color: #a07070; padding: 40px; font-size: 16px; }
   .welcome { text-align: center; padding: 40px 20px; color: #a07070; }
   .welcome .big { font-size: 48px; margin-bottom: 12px; }
@@ -154,6 +151,7 @@ const filterKeys = [
   { label: "Usul", key: "USUL" },
   { label: "Düzen", key: "DÜZEN" },
 ];
+const gizliSutunlar = ["UZANTI", "DOSYA ADI"];
 
 const uploadArea = document.getElementById("uploadArea");
 uploadArea.addEventListener("dragover", e => { e.preventDefault(); uploadArea.classList.add("drag-over"); });
@@ -174,7 +172,6 @@ function handleFile(file) {
     turkuData = data;
     selected = {};
     filterKeys.forEach(f => selected[f.key] = "");
-    // Kaydet
     try {
       localStorage.setItem("turkuData", JSON.stringify(data));
       localStorage.setItem("turkuFileName", file.name);
@@ -188,11 +185,10 @@ function handleFile(file) {
 function setUploadSuccess(count, name) {
   uploadArea.classList.add("upload-success");
   uploadArea.querySelector(".upload-icon").textContent = "✅";
-  uploadArea.querySelector(".upload-text").textContent = `${count} türkü yüklendi`;
+  uploadArea.querySelector(".upload-text").textContent = count + " türkü yüklendi";
   uploadArea.querySelector(".upload-sub").textContent = name;
 }
 
-// Sayfa açılınca kayıtlı veriyi yükle
 window.addEventListener("load", () => {
   try {
     const saved = localStorage.getItem("turkuData");
@@ -220,16 +216,30 @@ function buildFilters() {
     if (!vals.length) return;
     const group = document.createElement("div");
     group.className = "filter-group";
-    group.innerHTML = `<div class="filter-label">${label}</div><div class="chips" id="chips-${key}"></div>`;
+    group.innerHTML = '<div class="filter-label">' + label + '</div><div class="chips" id="chips-' + key + '"></div>';
     container.appendChild(group);
     vals.forEach(v => {
       const btn = document.createElement("button");
       btn.className = "chip" + (selected[key] === v ? " active" : "");
       btn.textContent = v;
       btn.onclick = () => { selected[key] = selected[key] === v ? "" : v; render(); };
-      group.querySelector(`#chips-${key}`).appendChild(btn);
+      group.querySelector("#chips-" + key).appendChild(btn);
     });
   });
+}
+
+function notaAc(dosyaAdi) {
+  // Dosyayı açmak için kullanıcıdan seçmesini isteyelim
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = ".jpg,.jpeg,.pdf,.png";
+  input.onchange = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    window.open(url, "_blank");
+  };
+  input.click();
 }
 
 function render() {
@@ -247,7 +257,7 @@ function render() {
 
   const hasFilter = document.getElementById("searchInput").value || filterKeys.some(f => selected[f.key]);
   document.getElementById("resetBtn").style.display = hasFilter ? "block" : "none";
-  document.getElementById("countText").textContent = `${results.length} / ${turkuData.length} türkü`;
+  document.getElementById("countText").textContent = results.length + " / " + turkuData.length + " türkü";
 
   const container = document.getElementById("results");
   container.innerHTML = "";
@@ -258,7 +268,7 @@ function render() {
   results.forEach((t, i) => {
     const card = document.createElement("div");
     card.className = "card";
-    card.style.animationDelay = `${Math.min(i, 20) * 0.04}s`;
+    card.style.animationDelay = (Math.min(i, 20) * 0.04) + "s";
     const ad = t[adKey] || "";
     const il = t["İL"] || "";
     const ilce = t["İLÇE"] || "";
@@ -268,21 +278,25 @@ function render() {
     const duzen = t["DÜZEN"] || "";
     const karar = t["KARAR"] || "";
     const kaynak = t["KAYNAK"] || "";
-    const ilText = il ? (ilce ? `${il} / ${ilce}` : il) : "";
-    card.innerHTML = `
-      <div class="card-title">🎵 ${ad}</div>
-      <div class="tags">
-        ${ilText ? `<span class="tag tag-il">${ilText}</span>` : ""}
-        ${yore ? `<span class="tag tag-yore">${yore}</span>` : ""}
-        ${makam ? `<span class="tag tag-makam">${makam}</span>` : ""}
-        ${usul ? `<span class="tag tag-usul">${usul}</span>` : ""}
-        ${duzen ? `<span class="tag tag-duzen">${duzen}</span>` : ""}
-      </div>
-      <div class="card-meta">
-        ${karar ? `<span>🎼 ${karar}</span>` : ""}
-        ${kaynak ? `<span>📖 ${kaynak}</span>` : ""}
-      </div>
-    `;
+    const uzanti = t["UZANTI"] || "";
+    const ilText = il ? (ilce ? il + " / " + ilce : il) : "";
+    const dosyaAdi = ad + (uzanti ? "." + uzanti : "");
+    card.innerHTML =
+      '<div class="card-title">🎵 ' + ad + '</div>' +
+      '<div class="tags">' +
+        (ilText ? '<span class="tag tag-il">' + ilText + '</span>' : '') +
+        (yore ? '<span class="tag tag-yore">' + yore + '</span>' : '') +
+        (makam ? '<span class="tag tag-makam">' + makam + '</span>' : '') +
+        (usul ? '<span class="tag tag-usul">' + usul + '</span>' : '') +
+        (duzen ? '<span class="tag tag-duzen">' + duzen + '</span>' : '') +
+      '</div>' +
+      '<div class="card-bottom">' +
+        '<div class="card-meta">' +
+          (karar ? '<span>🎼 ' + karar + '</span>' : '') +
+          (kaynak ? '<span>📖 ' + kaynak + '</span>' : '') +
+        '</div>' +
+        (uzanti ? '<button class="nota-btn" onclick="notaAc(\'' + dosyaAdi.replace(/'/g, "\\'") + '\')">🎼 Notayı Aç</button>' : '') +
+      '</div>';
     container.appendChild(card);
   });
 }
