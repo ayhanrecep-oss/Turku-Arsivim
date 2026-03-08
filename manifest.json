@@ -1,0 +1,16 @@
+{
+  "name": "Türkü Arşivi",
+  "short_name": "Türkü Arşivi",
+  "description": "Türkü nota arşivi",
+  "start_url": "/Turku-Arsivim/",
+  "display": "standalone",
+  "background_color": "#f5e6e0",
+  "theme_color": "#8B0000",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}

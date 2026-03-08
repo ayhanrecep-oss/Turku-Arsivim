@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Türkü Arşivi</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#8B0000">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Crimson+Text:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f5e6e0 0%, #ede0d4 40%, #e8d5c4 100%);
+    font-family: 'Crimson Text', serif;
+    padding-bottom: 40px;
+  }
+  header {
+    background: linear-gradient(135deg, #8B0000, #c0392b);
+    padding: 22px 20px 18px;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(139,0,0,0.3);
+  }
+  header .icon { font-size: 28px; margin-bottom: 2px; }
+  header h1 { font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 900; color: #fff; letter-spacing: 1px; }
+  header .count { color: #ffcdd2; font-size: 13px; margin-top: 3px; }
+  .container { max-width: 680px; margin: 0 auto; padding: 16px 16px 0; }
+  .upload-area {
+    border: 1.5px dashed #c0392b;
+    border-radius: 30px;
+    padding: 8px 18px;
+    text-align: center;
+    background: rgba(255,255,255,0.7);
+    cursor: pointer;
+    margin-bottom: 12px;
+    transition: all 0.2s;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    justify-content: center;
+  }
+  .upload-area:hover, .upload-area.drag-over { background: rgba(192,57,43,0.08); border-color: #8B0000; }
+  .upload-area input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  .upload-icon { font-size: 18px; }
+  .upload-text { font-size: 13px; color: #8B0000; font-weight: 600; }
+  .upload-sub { font-size: 11px; color: #a07070; }
+  .upload-success { background: rgba(25,111,61,0.08); border-color: #196f3d; }
+  .upload-success .upload-text { color: #196f3d; }
+  input[type=text] {
+    width: 100%;
+    padding: 11px 18px;
+    border-radius: 30px;
+    border: 2px solid #e8b4ad;
+    background: rgba(255,255,255,0.9);
+    font-size: 15px;
+    font-family: 'Crimson Text', serif;
+    color: #2c1010;
+    outline: none;
+    box-shadow: 0 2px 10px rgba(150,50,50,0.1);
+    margin-bottom: 14px;
+  }
+  input[type=text]::placeholder { color: #c4a09a; }
+  .filter-group { margin-bottom: 12px; }
+  .filter-label { font-size: 11px; font-weight: 600; color: #8B0000; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 5px; }
+  .chip {
+    padding: 5px 13px; border-radius: 20px;
+    border: 1.5px solid #d4a5a0; background: rgba(255,255,255,0.7);
+    color: #7a3030; font-size: 13px; font-family: 'Crimson Text', serif;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .chip.active { border: 2px solid #c0392b; background: #c0392b; color: #fff; font-weight: 600; }
+  .reset-btn {
+    background: none; border: none; color: #c0392b; cursor: pointer;
+    font-size: 13px; font-family: 'Crimson Text', serif;
+    text-decoration: underline; margin-bottom: 14px; display: none;
+  }
+  .results { display: flex; flex-direction: column; gap: 10px; }
+  .card {
+    background: rgba(255,255,255,0.85);
+    border-radius: 12px; padding: 14px 18px;
+    border-left: 4px solid #c0392b;
+    box-shadow: 0 2px 12px rgba(150,50,50,0.1);
+    animation: fadeIn 0.3s ease both;
+  }
+  .card-title { font-family: 'Playfair Display', serif; font-size: 16px; font-weight: 700; color: #2c1010; margin-bottom: 7px; }
+  .tags { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 7px; }
+  .tag { border-radius: 12px; padding: 2px 9px; font-size: 12px; font-family: 'Crimson Text', serif; font-weight: 600; }
+  .tag-il    { background: #fff3f3; color: #8B0000; border: 1px solid #8B000033; }
+  .tag-yore  { background: #fff8f5; color: #6d4c41; border: 1px solid #6d4c4133; }
+  .tag-makam { background: #f0f8ff; color: #1a5276; border: 1px solid #1a527633; }
+  .tag-usul  { background: #f0fff4; color: #196f3d; border: 1px solid #196f3d33; }
+  .tag-duzen { background: #fdf0ff; color: #6c3483; border: 1px solid #6c348333; }
+  .card-meta { font-size: 12px; color: #888; }
+  .card-meta span { margin-right: 12px; }
+  .empty { text-align: center; color: #a07070; padding: 40px; font-size: 16px; }
+  .welcome { text-align: center; padding: 40px 20px; color: #a07070; }
+  .welcome .big { font-size: 48px; margin-bottom: 12px; }
+  .welcome p { font-size: 15px; line-height: 1.6; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: #f5e6e0; }
+  ::-webkit-scrollbar-thumb { background: #c0392b; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="icon">🎸</div>
+  <h1>Türkü Arşivi</h1>
+  <div class="count" id="countText">Henüz veri yüklenmedi</div>
+</header>
+
+<div class="container">
+  <div class="upload-area" id="uploadArea">
+    <input type="file" accept=".xlsx,.xls" id="fileInput" onchange="handleFile(this.files[0])">
+    <div class="upload-icon">📂</div>
+    <div>
+      <div class="upload-text">Excel dosyasını seç</div>
+      <div class="upload-sub">Türküler_Listesi.xlsx</div>
+    </div>
+  </div>
+
+  <input type="text" id="searchInput" placeholder="🔍  Türkü adı ara..." oninput="render()">
+  <div id="filters"></div>
+  <button class="reset-btn" id="resetBtn" onclick="resetAll()">✕ Filtreleri temizle</button>
+
+  <div class="results" id="results">
+    <div class="welcome">
+      <div class="big">🎵</div>
+      <p>Türkü arşivinizi görmek için<br>yukarıdan Excel dosyanızı yükleyin.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js');
+}
+
+let turkuData = [];
+let selected = {};
+const filterKeys = [
+  { label: "Yöre", key: "YÖRE" },
+  { label: "İl", key: "İL" },
+  { label: "Makam", key: "MAKAM" },
+  { label: "Usul", key: "USUL" },
+  { label: "Düzen", key: "DÜZEN" },
+];
+
+const uploadArea = document.getElementById("uploadArea");
+uploadArea.addEventListener("dragover", e => { e.preventDefault(); uploadArea.classList.add("drag-over"); });
+uploadArea.addEventListener("dragleave", () => uploadArea.classList.remove("drag-over"));
+uploadArea.addEventListener("drop", e => {
+  e.preventDefault();
+  uploadArea.classList.remove("drag-over");
+  if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+});
+
+function handleFile(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const wb = XLSX.read(e.target.result, { type: "array" });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const data = XLSX.utils.sheet_to_json(ws);
+    turkuData = data;
+    selected = {};
+    filterKeys.forEach(f => selected[f.key] = "");
+    try {
+      localStorage.setItem("turkuData", JSON.stringify(data));
+      localStorage.setItem("turkuFileName", file.name);
+    } catch(e) {}
+    setUploadSuccess(data.length, file.name);
+    render();
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function setUploadSuccess(count, name) {
+  uploadArea.classList.add("upload-success");
+  uploadArea.querySelector(".upload-icon").textContent = "✅";
+  uploadArea.querySelector(".upload-text").textContent = count + " türkü yüklendi";
+  uploadArea.querySelector(".upload-sub").textContent = name;
+}
+
+window.addEventListener("load", () => {
+  try {
+    const saved = localStorage.getItem("turkuData");
+    const savedName = localStorage.getItem("turkuFileName") || "kayıtlı veri";
+    if (saved) {
+      turkuData = JSON.parse(saved);
+      filterKeys.forEach(f => selected[f.key] = "");
+      setUploadSuccess(turkuData.length, savedName);
+      render();
+    }
+  } catch(e) {}
+});
+
+function unique(key) {
+  return [...new Set(turkuData.map(t => (t[key] || "")).filter(Boolean))].sort();
+}
+
+function normalize(str) { return (str || "").toString().toLowerCase().trim(); }
+
+function buildFilters() {
+  const container = document.getElementById("filters");
+  container.innerHTML = "";
+  filterKeys.forEach(({ label, key }) => {
+    const vals = unique(key);
+    if (!vals.length) return;
+    const group = document.createElement("div");
+    group.className = "filter-group";
+    group.innerHTML = '<div class="filter-label">' + label + '</div><div class="chips" id="chips-' + key + '"></div>';
+    container.appendChild(group);
+    vals.forEach(v => {
+      const btn = document.createElement("button");
+      btn.className = "chip" + (selected[key] === v ? " active" : "");
+      btn.textContent = v;
+      btn.onclick = () => { selected[key] = selected[key] === v ? "" : v; render(); };
+      group.querySelector("#chips-" + key).appendChild(btn);
+    });
+  });
+}
+
+function render() {
+  if (!turkuData.length) return;
+  buildFilters();
+  const searchVal = document.getElementById("searchInput").value.toLowerCase();
+  const adKey = Object.keys(turkuData[0]).find(k => k.includes("ADI") || k.includes("TÜRKÜ")) || Object.keys(turkuData[0])[0];
+  const results = turkuData.filter(t => {
+    if (searchVal && !normalize(t[adKey]).includes(searchVal)) return false;
+    for (const { key } of filterKeys) {
+      if (selected[key] && normalize(t[key]) !== normalize(selected[key])) return false;
+    }
+    return true;
+  });
+
+  const hasFilter = document.getElementById("searchInput").value || filterKeys.some(f => selected[f.key]);
+  document.getElementById("resetBtn").style.display = hasFilter ? "block" : "none";
+  document.getElementById("countText").textContent = results.length + " / " + turkuData.length + " türkü";
+
+  const container = document.getElementById("results");
+  container.innerHTML = "";
+  if (results.length === 0) {
+    container.innerHTML = '<div class="empty">Eşleşen türkü bulunamadı 🎵</div>';
+    return;
+  }
+  results.forEach((t, i) => {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.style.animationDelay = (Math.min(i, 20) * 0.04) + "s";
+    const ad = t[adKey] || "";
+    const il = t["İL"] || "";
+    const ilce = t["İLÇE"] || "";
+    const yore = t["YÖRE"] || "";
+    const makam = t["MAKAM"] || "";
+    const usul = t["USUL"] || "";
+    const duzen = t["DÜZEN"] || "";
+    const karar = t["KARAR"] || "";
+    const kaynak = t["KAYNAK"] || "";
+    const ilText = il ? (ilce ? il + " / " + ilce : il) : "";
+    card.innerHTML =
+      '<div class="card-title">🎵 ' + ad + '</div>' +
+      '<div class="tags">' +
+        (ilText ? '<span class="tag tag-il">' + ilText + '</span>' : '') +
+        (yore ? '<span class="tag tag-yore">' + yore + '</span>' : '') +
+        (makam ? '<span class="tag tag-makam">' + makam + '</span>' : '') +
+        (usul ? '<span class="tag tag-usul">' + usul + '</span>' : '') +
+        (duzen ? '<span class="tag tag-duzen">' + duzen + '</span>' : '') +
+      '</div>' +
+      '<div class="card-meta">' +
+        (karar ? '<span>🎼 ' + karar + '</span>' : '') +
+        (kaynak ? '<span>📖 ' + kaynak + '</span>' : '') +
+      '</div>';
+    container.appendChild(card);
+  });
+}
+
+function resetAll() {
+  document.getElementById("searchInput").value = "";
+  filterKeys.forEach(f => selected[f.key] = "");
+  render();
+}
+</script>
+</body>
+</html>
