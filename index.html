@@ -174,14 +174,37 @@ function handleFile(file) {
     turkuData = data;
     selected = {};
     filterKeys.forEach(f => selected[f.key] = "");
-    uploadArea.classList.add("upload-success");
-    uploadArea.querySelector(".upload-icon").textContent = "✅";
-    uploadArea.querySelector(".upload-text").textContent = `${data.length} türkü yüklendi`;
-    uploadArea.querySelector(".upload-sub").textContent = file.name;
+    // Kaydet
+    try {
+      localStorage.setItem("turkuData", JSON.stringify(data));
+      localStorage.setItem("turkuFileName", file.name);
+    } catch(e) {}
+    setUploadSuccess(data.length, file.name);
     render();
   };
   reader.readAsArrayBuffer(file);
 }
+
+function setUploadSuccess(count, name) {
+  uploadArea.classList.add("upload-success");
+  uploadArea.querySelector(".upload-icon").textContent = "✅";
+  uploadArea.querySelector(".upload-text").textContent = `${count} türkü yüklendi`;
+  uploadArea.querySelector(".upload-sub").textContent = name;
+}
+
+// Sayfa açılınca kayıtlı veriyi yükle
+window.addEventListener("load", () => {
+  try {
+    const saved = localStorage.getItem("turkuData");
+    const savedName = localStorage.getItem("turkuFileName") || "kayıtlı veri";
+    if (saved) {
+      turkuData = JSON.parse(saved);
+      filterKeys.forEach(f => selected[f.key] = "");
+      setUploadSuccess(turkuData.length, savedName);
+      render();
+    }
+  } catch(e) {}
+});
 
 function unique(key) {
   return [...new Set(turkuData.map(t => (t[key] || "")).filter(Boolean))].sort();
@@ -272,4 +295,3 @@ function resetAll() {
 </script>
 </body>
 </html>
-
